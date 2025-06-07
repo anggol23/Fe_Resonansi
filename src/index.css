@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Agu+Display&family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Outfit", sans-serif;
+  min-height: 100vh; /* Lebih fleksibel dibanding height: 100vh */
+  padding-top: clamp(60px, 5vw, 80px); /* Responsif tergantung ukuran layar */
+}
+
+/* Tiptap atau ReactQuill Editor */
+.ql-editor {
+  font-size: 1.05rem;
+  line-height: 1.6; /* Menambah keterbacaan */
+}
+
+/* .post-content p {
+  margin-bottom: 0.5rem;
+}
+
+.post-content h1, .post-content h2 {
+  font-weight: 600;
+  font-family: sans-serif;
+  margin: 1.5rem 0;
+}
+
+.post-content a {
+  color: rgb(73, 149, 199);
+  text-decoration: none;
+} */
+
+.post-content a:hover {
+  text-decoration: underline;
+}
+
+.dash-unduhan {
+  padding: 20px;
+}
+
+button {
+  margin-left: 10px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin: 5px 0;
+}
+
+a {
+  text-decoration: none;
+}
