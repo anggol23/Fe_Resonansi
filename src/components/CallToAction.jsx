@@ -13,7 +13,7 @@ export default function CallToAction() {
         </p>
 <div className="mt-6 flex justify-center space-x-4">
 <FooterIcon 
-  href="https://www.instagram.com/dpc_gmni_purbalingga?igsh=bmx2Z3NxNDdjYzVr" 
+  href="https://www.instagram.com/pa_gmni_purbalingga/" 
   icon={BsInstagram} 
   className="text-xl hover:text-gray-300 transition" 
 />
@@ -23,7 +23,7 @@ export default function CallToAction() {
   className="text-xl hover:text-gray-300 transition" 
 />
 <FooterIcon 
-  href="resonansi2106@gmail.com" 
+  href="mailto:resonansi2106@gmail.com" 
   icon={BsEnvelope} 
   className="text-xl hover:text-gray-300 transition" 
 />
