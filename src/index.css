@@ -7,7 +7,65 @@
 body {
   font-family: "Outfit", sans-serif;
   min-height: 100vh; /* Lebih fleksibel dibanding height: 100vh */
-  padding-top: clamp(60px, 5vw, 80px); /* Responsif tergantung ukuran layar */
+  /* Tambah padding top karena header sekarang berisi TopBar + Navbar + Category ribbon */
+  padding-top: clamp(90px, 9vw, 120px);
+}
+
+h1, h2, .headline {
+  font-family: "Playfair Display", serif;
+}
+
+a {
+  color: inherit;
+}
+
+a:hover {
+  color: rgb(185 28 28 / 1); /* accent-700 (red) */
+  text-decoration: underline;
+}
+
+/* Marquee sederhana untuk Breaking News */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Rich content defaults */
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+.post-content {
+  overflow-wrap: anywhere;
+}
+.post-content p {
+  margin: 0.75rem 0;
+}
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4 {
+  margin: 1.25rem 0 0.75rem;
+  line-height: 1.25;
+}
+.post-content table {
+  width: 100%;
+}
+.post-content iframe,
+.post-content video {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 /* Tiptap atau ReactQuill Editor */

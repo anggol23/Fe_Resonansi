@@ -25,6 +25,7 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import SearchResults from "./pages/SearchResults";
 
 
 import PrivateRoute from "./components/PrivateRoute";
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/unduhan" element={<Unduhan />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
+  <Route path="/search" element={<SearchResults />} />
 
         <Route path="/oauth-success" element={<OAuthSuccess />} />
 

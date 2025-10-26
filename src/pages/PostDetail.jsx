@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FaUser, FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, FaLink } from 'react-icons/fa';  // Ikon pembuat dan ikon berbagi
 import CommentSection from '../components/CommentSection';
 import { jwtDecode } from "jwt-decode"; // Perbaikan impor
 import { format } from 'date-fns';  // Format waktu
+import { Helmet } from "react-helmet";
 
 export default function PostDetail() {
   const { slug } = useParams();
@@ -17,6 +18,7 @@ export default function PostDetail() {
 
   const token = localStorage.getItem("access_token");
   const API_URL = import.meta.env.VITE_API_URL;
+  const ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -37,6 +39,21 @@ export default function PostDetail() {
 
     fetchPost();
   }, [slug]);
+
+  const meta = useMemo(() => {
+    if (!post) return null;
+    const cleanText = (html) => {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html || '';
+      const text = tmp.textContent || tmp.innerText || '';
+      return text.replace(/\s+/g, ' ').trim();
+    };
+    const description = cleanText(post.excerpt || post.description || post.content || '').slice(0, 160);
+    const image = (post.image || '').startsWith('http') ? post.image : `${ORIGIN}${post.image || ''}`;
+    const url = `${ORIGIN}/post/${post.slug}`;
+    const title = post.title || 'Artikel';
+    return { title, description, image, url };
+  }, [post, ORIGIN]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -106,16 +123,37 @@ export default function PostDetail() {
   const createdAt = format(new Date(post.createdAt), 'dd MMMM yyyy');
 
   return (
-    <div className="max-w-3xl mx-auto p-5">
+    <div className="max-w-3xl mx-auto px-3 py-5">
+      {/* SEO & Social share meta */}
+      {meta && (
+        <Helmet>
+          <title>{meta.title} | Portal Berita</title>
+          <meta name="description" content={meta.description} />
+          <link rel="canonical" href={meta.url} />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={meta.title} />
+          <meta property="og:description" content={meta.description} />
+          <meta property="og:image" content={meta.image} />
+          <meta property="og:url" content={meta.url} />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={meta.title} />
+          <meta name="twitter:description" content={meta.description} />
+          <meta name="twitter:image" content={meta.image} />
+        </Helmet>
+      )}
       <img
         src={post.image}
-        alt={post.title}
-        className="w-full h-72 object-cover my-5 rounded-lg"
+        alt={post.imageAlt || post.title}
+        className="w-full aspect-video object-cover rounded-lg mb-5"
       />
-      <h1 className="text-3xl text-center font-bold">{post.title}</h1>
+  <h1 className="text-2xl sm:text-3xl lg:text-4xl text-center font-bold">{post.title}</h1>
 
       {/* Informasi Pembuat dan Waktu */}
-      <div className="flex items-center justify-center space-x-2 mt-4 text-sm text-gray-600">
+      <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs sm:text-sm text-gray-600">
         <div className="flex items-center space-x-1">
           <FaUser />
           <span>{post.authorName}</span> {/* Ganti dari post.userId ke post.authorName */}
@@ -124,8 +162,8 @@ export default function PostDetail() {
         <span>{createdAt}</span> {/* Menampilkan waktu dalam format tanggal, bulan, tahun */}
       </div>
 
-      <div className="w-100 h-1 bg-red-600 mx-auto mt-25 my-7" />
-      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+      <div className="w-full h-px bg-accent-700/60 my-6" />
+      <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
       {/* Pass post as a prop here */}
       <CommentSection
@@ -137,7 +175,7 @@ export default function PostDetail() {
       />
 
       {/* Bagikan Link */}
-      <div className="mt-5 flex justify-center space-x-6">
+      <div className="mt-5 flex flex-wrap justify-center gap-4">
         <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')}>
           <FaWhatsapp className="text-green-500 text-2xl hover:text-green-600" />
         </button>
@@ -155,9 +193,9 @@ export default function PostDetail() {
         </button>
       </div>
 
-      <div className="flex justify-between mt-8" style={{ borderTop: "1px solid #ccc", borderBottom: "1px solid #ccc", padding: "1rem 0" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-y border-gray-200 dark:border-gray-700 py-4 mt-8">
         {previousPost && (
-          <div className="w-1/2 pr-4">
+          <div>
             <h3 className="text-xl font-semibold dark:text-gray-300">Artikel Sebelumnya</h3>
             <Link
               to={`/post/${previousPost.slug}`}
@@ -169,7 +207,7 @@ export default function PostDetail() {
           </div>
         )}
         {nextPost && (
-          <div className="w-1/2 pl-4">
+          <div>
             <h3 className="text-xl font-semibold dark:text-gray-300">Artikel Selanjutnya</h3>
             <Link
               to={`/post/${nextPost.slug}`}

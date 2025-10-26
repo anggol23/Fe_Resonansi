@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function PostCard({ post }) {
   return (
-    <div className="group relative w-full border border-red-500 rounded-lg sm:w-[430px] transition-all flex flex-col overflow-hidden shadow-md hover:shadow-lg">
+    <div className="group relative w-full border border-accent-700 rounded-lg sm:w-[430px] transition-all flex flex-col overflow-hidden shadow-md hover:shadow-lg">
       {/* 🖼️ Bagian Gambar */}
       <div className="relative overflow-hidden h-[250px]">
         <Link to={`/post/${post.slug}`}>
@@ -18,7 +18,7 @@ export default function PostCard({ post }) {
       <div className="flex-1 p-4 flex flex-col justify-between">
         <div>
           <p className="text-lg font-semibold line-clamp-2">{post.title}</p>
-          <span className="italic text-sm text-gray-500">{post.category}</span>
+          <span className="italic text-sm text-accent-700">{post.category}</span>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export default function PostCard({ post }) {
       <div className="p-4 border-t border-gray-200">
         <Link
           to={`/post/${post.slug}`}
-          className="block text-center border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 py-2 rounded-md"
+          className="block text-center border border-accent-700 text-accent-700 hover:bg-accent-700 hover:text-white transition-all duration-300 py-2 rounded-md"
         >
           Baca Artikel Selengkapnya
         </Link>

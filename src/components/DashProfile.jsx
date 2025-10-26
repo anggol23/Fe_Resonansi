@@ -1,4 +1,4 @@
-import { Alert, Button, TextInput } from "flowbite-react";
+import { Alert, Button, TextInput, Spinner } from "flowbite-react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -43,27 +43,35 @@ export default function DashProfile() {
   const uploadImage = async (file) => {
     setImageFileUploading(true);
     try {
-      const cloudinaryUrl = import.meta.env.VITE_CLOUDINARY_URL;
-      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+      // Gunakan ENV bila ada, jika tidak gunakan default agar tidak gagal diam-diam
+      const cloudinaryUrl = import.meta.env.VITE_CLOUDINARY_URL || "https://api.cloudinary.com/v1_1/dmmcoztd7/image/upload";
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "gambar";
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", uploadPreset);
 
       const res = await fetch(cloudinaryUrl, {
         method: "POST",
-        body: formData,
+        body: fd,
       });
 
-      const data = await res.json();
-      if (data.secure_url) {
-        setImageFileUrl(data.secure_url);
-        setFormData((prev) => ({ ...prev, profilePicture: data.secure_url }));
-      } else {
-        throw new Error("Failed to upload image.");
+      const text = await res.text();
+      let data = {};
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        // abaikan jika bukan JSON valid
       }
+      if (!res.ok || !data?.secure_url) {
+        const msg = data?.error?.message || "Gagal mengunggah gambar (periksa Cloudinary cloud name & upload preset)";
+        setUpdateUserError(msg);
+        return;
+      }
+      setImageFileUrl(data.secure_url);
+      setFormData((prev) => ({ ...prev, profilePicture: data.secure_url }));
     } catch (error) {
-      setUpdateUserError("Error uploading image.");
+      setUpdateUserError("Terjadi kesalahan saat mengunggah gambar.");
     } finally {
       setImageFileUploading(false);
     }
@@ -78,8 +86,9 @@ export default function DashProfile() {
     setUpdateUserError(null);
     setUpdateUserSuccess(null);
 
-    if (!token) {
-      setUpdateUserError("Unauthorized: No token found");
+    const authToken = token || localStorage.getItem("access_token");
+    if (!authToken) {
+      setUpdateUserError("Tidak diizinkan: Token tidak ditemukan");
       return;
     }
 
@@ -95,13 +104,11 @@ export default function DashProfile() {
 
     try {
       dispatch(updateStart());
-      console.log("📌 Data yang dikirim ke API:", formData);
-
       const res = await fetch(`${API_URL}/api/user/update/${currentUser._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         credentials: "include",
         body: JSON.stringify(formData),
@@ -109,11 +116,12 @@ export default function DashProfile() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || "Failed to update user.");
+        throw new Error(data.message || "Gagal memperbarui profil.");
       }
 
-      dispatch(updateSuccess(data));
-      setUpdateUserSuccess("Profile updated successfully.");
+      const updatedUser = data?.user || data;
+      dispatch(updateSuccess(updatedUser));
+      setUpdateUserSuccess("Profil berhasil diperbarui.");
     } catch (error) {
       dispatch(updateFailure(error.message));
       setUpdateUserError(error.message);
@@ -121,8 +129,9 @@ export default function DashProfile() {
   };
 
   const handleDeleteUser = async () => {
-    if (!token) {
-      setUpdateUserError("Unauthorized: No token found");
+    const authToken = token || localStorage.getItem("access_token");
+    if (!authToken) {
+      setUpdateUserError("Tidak diizinkan: Token tidak ditemukan");
       return;
     }
 
@@ -131,13 +140,13 @@ export default function DashProfile() {
       const res = await fetch(`${API_URL}/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || "Failed to delete user.");
+        throw new Error(data.message || "Gagal menghapus akun.");
       }
 
       dispatch(deleteUserSuccess());
@@ -151,7 +160,7 @@ export default function DashProfile() {
   const handleSignout = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/signout`, { method: "POST" });
-      if (!res.ok) throw new Error("Failed to sign out");
+      if (!res.ok) throw new Error("Gagal keluar");
       dispatch(signoutSuccess());
       navigate("/sign-in");
     } catch (error) {
@@ -161,19 +170,25 @@ export default function DashProfile() {
 
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
-      <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
+      <h1 className="my-7 text-center font-semibold text-3xl">Profil</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input type="file" accept="image/*" onChange={handleImageChange} ref={filePickerRef} hidden />
         <div
           className="relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full"
           onClick={() => filePickerRef.current.click()}
+          title="Klik untuk memilih foto"
         >
           <img
-            src={imageFileUrl || "/default-avatar.png"}
+            src={imageFileUrl || "/default-avatar.svg"}
             alt="user"
             className="rounded-full w-full h-full object-cover border-8 border-[lightgray]"
           />
+          {imageFileUploading && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <Spinner color="failure" />
+            </div>
+          )}
         </div>
 
         <TextInput id="username" placeholder="Username" defaultValue={currentUser?.username} onChange={handleChange} />
@@ -181,14 +196,14 @@ export default function DashProfile() {
         <TextInput id="password" type="password" placeholder="New Password" onChange={handleChange} />
 
         <Button type="submit" color="failure" outline disabled={loading || imageFileUploading}>
-          {loading || imageFileUploading ? "Updating..." : "Update"}
+          {loading || imageFileUploading ? "Memperbarui..." : "Perbarui"}
         </Button>
       </form>
 
       {currentUser?.role === "admin" && (
         <div className="mt-1">
           <Button as={Link} gradientMonochrome="failure" to="/create-post">
-            Create Post
+            Buat Artikel
           </Button>
         </div>
       )}
@@ -198,10 +213,10 @@ export default function DashProfile() {
 
       <div className="flex justify-between mt-5">
         <Button color="failure" outline onClick={handleSignout}>
-          Sign Out
+          Keluar
         </Button>
         <Button color="failure" outline onClick={handleDeleteUser}>
-          Delete Account
+          Hapus Akun
         </Button>
       </div>
     </div>

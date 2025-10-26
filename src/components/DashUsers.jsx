@@ -2,7 +2,7 @@ import { Modal, Table, Button, Select } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { FaCheck, FaTimes, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,14 +14,14 @@ export default function DashUsers() {
   const [loading, setLoading] = useState(false);
 
   const fetchUsers = async () => {
-    const token = localStorage.getItem("access_token");
+    const token = currentUser?.accessToken || localStorage.getItem("access_token");
     if (!token) {
       console.error("❌ Tidak ada token di localStorage!");
       return;
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/user/getusers`, {
+      const res = await fetch(`${API_URL}/api/user/getusers?limit=20&sort=desc`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -43,11 +43,11 @@ export default function DashUsers() {
     if (currentUser?.role === "admin") {
       fetchUsers();
     }
-  }, [currentUser?._id]);
+  }, [currentUser]);
 
   const handleDeleteUser = async () => {
     setLoading(true);
-    const token = localStorage.getItem("access_token");
+  const token = currentUser?.accessToken || localStorage.getItem("access_token");
     if (!token) {
       console.error("❌ Tidak ada token di localStorage!");
       setLoading(false);
@@ -79,7 +79,7 @@ export default function DashUsers() {
 
   const handleRoleChange = async (userId, newRole) => {
     setLoading(true);
-    const token = localStorage.getItem("access_token");
+  const token = currentUser?.accessToken || localStorage.getItem("access_token");
     if (!token) {
       console.error("❌ Tidak ada token di localStorage!");
       setLoading(false);
@@ -119,7 +119,7 @@ export default function DashUsers() {
     <div className="p-3">
       {currentUser?.role === "admin" && users.length > 0 ? (
         <>
-          <Table>
+          <Table hoverable>
             <Table.Head>
               <Table.HeadCell>Tanggal Dibuat</Table.HeadCell>
               <Table.HeadCell>Gambar Pengguna</Table.HeadCell>
@@ -128,9 +128,9 @@ export default function DashUsers() {
               <Table.HeadCell>Role</Table.HeadCell>
               <Table.HeadCell>Hapus</Table.HeadCell>
             </Table.Head>
-            {users.map((user) => (
-              <Table.Body key={user._id}>
-                <Table.Row>
+            <Table.Body className="divide-y">
+              {users.map((user) => (
+                <Table.Row key={user._id}>
                   <Table.Cell>{new Date(user.createdAt).toLocaleDateString()}</Table.Cell>
                   <Table.Cell>
                     <img src={user.profilePicture} alt={user.username} className="w-10 h-10 rounded-full" />
@@ -149,19 +149,20 @@ export default function DashUsers() {
                   </Table.Cell>
                   <Table.Cell>
                     <button
-                      className="text-red-500"
+                      className="text-accent-700 hover:text-accent-800"
                       onClick={() => {
                         setUserIdToDelete(user._id);
                         setShowModal(true);
                       }}
                       disabled={loading}
+                      title="Hapus pengguna"
                     >
                       <FaTrash />
                     </button>
                   </Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
 
           {/* Modal Konfirmasi Hapus */}
@@ -170,15 +171,15 @@ export default function DashUsers() {
               <Modal.Header>Hapus Pengguna</Modal.Header>
               <Modal.Body>
                 <div className="flex items-center gap-2">
-                  <HiOutlineExclamationCircle className="text-red-500" size={30} />
+                  <HiOutlineExclamationCircle className="text-accent-700" size={30} />
                   <p>Apakah Anda yakin ingin menghapus pengguna ini?</p>
                 </div>
               </Modal.Body>
               <Modal.Footer>
-                <Button color="red" onClick={handleDeleteUser} disabled={loading}>
+                <Button color="failure" onClick={handleDeleteUser} disabled={loading}>
                   {loading ? "Menghapus..." : "Hapus"}
                 </Button>
-                <Button onClick={() => setShowModal(false)} disabled={loading}>
+                <Button onClick={() => setShowModal(false)} disabled={loading} color="gray">
                   Batal
                 </Button>
               </Modal.Footer>

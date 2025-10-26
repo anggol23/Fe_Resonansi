@@ -1,15 +1,42 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 
-const categories = ["semua", "pendidikan", "sosial", "ekonomi", "politik", "cerpen", "puisi"];
+const categories = [
+  "semua",
+  // Rubrik utama situs
+  "jateng",
+  "nasional",
+  "teknologi",
+  "lifestyle",
+  "olahraga",
+  "travel",
+  // Kategori tematik sebelumnya
+  "pendidikan",
+  "sosial",
+   "ekonomi",
+  "politik",
+  "cerpen",
+  "puisi",
+];
 
 export default function Artikel() {
   const [posts, setPosts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("semua");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
+
+  // Sinkronkan kategori dari query string (?cat=...)
+  useEffect(() => {
+    const cat = (searchParams.get("cat") || "").toLowerCase();
+    if (cat && categories.includes(cat)) {
+      setSelectedCategory(cat);
+    } else if (!cat) {
+      setSelectedCategory("semua");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -48,24 +75,36 @@ export default function Artikel() {
     return () => controller.abort();
   }, [API_URL, selectedCategory]);
 
+  const onSelectCategory = (cat) => {
+    setSelectedCategory(cat);
+    if (cat === "semua") {
+      searchParams.delete("cat");
+      setSearchParams(searchParams, { replace: true });
+    } else {
+      setSearchParams({ cat }, { replace: true });
+    }
+  };
+
+  const pretty = useMemo(() => (txt) => txt.charAt(0).toUpperCase() + txt.slice(1), []);
+
   return (
     <div className="min-h-screen p-10">
-      <h1 className="text-3xl font-bold text-center my-7">Artikel</h1>
-      <div className="w-20 h-1 bg-red-600 mx-auto my-7"></div>
+  <h1 className="text-3xl font-bold text-center my-7">Artikel</h1>
+  <div className="w-20 h-1 bg-accent-700 mx-auto my-7"></div>
 
       {/* 🔘 Tombol Filter Kategori */}
       <div className="flex justify-center gap-3 mb-10 flex-wrap">
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => onSelectCategory(cat)}
             className={`px-4 py-2 rounded-full text-sm font-semibold border ${
               selectedCategory === cat
-                ? "bg-red-600 text-white"
-                : "bg-white text-red-600 border-red-600"
-            } hover:bg-red-500 hover:text-white transition`}
+                ? "bg-accent-700 text-white border-accent-700"
+                : "bg-white text-accent-700 border-accent-700"
+            } hover:bg-accent-600 hover:text-white transition`}
           >
-            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            {pretty(cat)}
           </button>
         ))}
       </div>
@@ -73,7 +112,7 @@ export default function Artikel() {
       {/* 🔄 Loading */}
       {loading && (
         <div className="flex justify-center items-center min-h-[200px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-red-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-accent-700"></div>
         </div>
       )}
 
@@ -103,7 +142,7 @@ export default function Artikel() {
               </p>
               <Link
                 to={`/post/${post.slug}`}
-                className="text-red-500 font-semibold mt-3 block hover:underline"
+                className="text-accent-700 font-semibold mt-3 block hover:underline"
               >
                 Baca Selengkapnya →
               </Link>

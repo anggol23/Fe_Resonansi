@@ -29,6 +29,15 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      // Relax strictness to align with current codebase while we phase in types/props hardening
+      'react/prop-types': 'off',
+      'react/no-unescaped-entities': 'warn',
+  'react/display-name': 'warn',
+      // Treat unused vars as warnings and ignore conventional placeholders like _
+      'no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

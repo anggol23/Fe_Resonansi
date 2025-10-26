@@ -22,12 +22,12 @@ export default function DashboardComp() {
   const [lastMonthPosts, setLastMonthPosts] = useState(0);
   const [lastMonthComments, setLastMonthComments] = useState(0);
 
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser, token } = useSelector((state) => state.user);
 
   useEffect(() => {
-    if (!currentUser?.isAdmin) return; // hanya admin bisa fetch data
+    if (currentUser?.role !== "admin") return; // hanya admin bisa fetch data
 
-    const token = currentUser?.accessToken;
+    const authToken = token || currentUser?.accessToken || localStorage.getItem("access_token");
 
     const fetchUsers = async () => {
       try {
@@ -35,15 +35,17 @@ export default function DashboardComp() {
           `${API_URL}/api/user/getusers?limit=5&sort=desc`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authToken}`,
             },
           }
         );
         const data = await res.json();
         if (res.ok) {
-          setUsers(data.users);
-          setTotalUsers(data.totalUsers);
-          setLastMonthUsers(data.lastMonthUsers);
+          setUsers(Array.isArray(data.users) ? data.users : []);
+          const total =
+            data.totalUsers ?? data.total ?? data.count ?? (Array.isArray(data.users) ? data.users.length : 0);
+          setTotalUsers(total);
+          setLastMonthUsers(data.lastMonthUsers ?? 0);
         } else {
           console.error("Fetch users failed:", data.message || data);
         }
@@ -55,18 +57,20 @@ export default function DashboardComp() {
     const fetchPosts = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/post/getposts?limit=5&order=desc`,
+          `${API_URL}/api/posts/getposts?limit=5&order=desc`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authToken}`,
             },
           }
         );
         const data = await res.json();
         if (res.ok) {
-          setPosts(data.posts);
-          setTotalPosts(data.totalPosts);
-          setLastMonthPosts(data.lastMonthPosts);
+          setPosts(Array.isArray(data.posts) ? data.posts : []);
+          const total =
+            data.totalPosts ?? data.total ?? data.count ?? (Array.isArray(data.posts) ? data.posts.length : 0);
+          setTotalPosts(total);
+          setLastMonthPosts(data.lastMonthPosts ?? 0);
         } else {
           console.error("Fetch posts failed:", data.message || data);
         }
@@ -78,18 +82,20 @@ export default function DashboardComp() {
     const fetchComments = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/comment/getcomments?limit=5&sort=desc`,
+          `${API_URL}/api/comments/getcomments?limit=5&sort=desc`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authToken}`,
             },
           }
         );
         const data = await res.json();
         if (res.ok) {
-          setComments(data.comments);
-          setTotalComments(data.totalComments);
-          setLastMonthComments(data.lastMonthComments);
+          setComments(Array.isArray(data.comments) ? data.comments : []);
+          const total =
+            data.totalComments ?? data.total ?? data.count ?? (Array.isArray(data.comments) ? data.comments.length : 0);
+          setTotalComments(total);
+          setLastMonthComments(data.lastMonthComments ?? 0);
         } else {
           console.error("Fetch comments failed:", data.message || data);
         }
@@ -101,7 +107,7 @@ export default function DashboardComp() {
     fetchUsers();
     fetchPosts();
     fetchComments();
-  }, [currentUser]);
+  }, [currentUser, token]);
 
   return (
     <div className="p-3 md:mx-auto">
@@ -113,14 +119,14 @@ export default function DashboardComp() {
               <h3 className="text-gray-500 text-md uppercase">Total Users</h3>
               <p className="text-2xl">{totalUsers}</p>
             </div>
-            <HiOutlineUserGroup className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+            <HiOutlineUserGroup className="bg-accent-700 text-white rounded-full text-5xl p-3 shadow-lg" />
           </div>
           <div className="flex gap-2 text-sm">
             <span className="text-green-500 flex items-center">
               <HiArrowNarrowUp />
               {lastMonthUsers}
             </span>
-            <div className="text-gray-500">Last month</div>
+            <div className="text-gray-500">Bulan lalu</div>
           </div>
         </div>
 
@@ -130,14 +136,14 @@ export default function DashboardComp() {
               <h3 className="text-gray-500 text-md uppercase">Total Comments</h3>
               <p className="text-2xl">{totalComments}</p>
             </div>
-            <HiAnnotation className="bg-indigo-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+            <HiAnnotation className="bg-accent-700 text-white rounded-full text-5xl p-3 shadow-lg" />
           </div>
           <div className="flex gap-2 text-sm">
             <span className="text-green-500 flex items-center">
               <HiArrowNarrowUp />
               {lastMonthComments}
             </span>
-            <div className="text-gray-500">Last month</div>
+            <div className="text-gray-500">Bulan lalu</div>
           </div>
         </div>
 
@@ -147,14 +153,14 @@ export default function DashboardComp() {
               <h3 className="text-gray-500 text-md uppercase">Total Posts</h3>
               <p className="text-2xl">{totalPosts}</p>
             </div>
-            <HiDocumentText className="bg-lime-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+            <HiDocumentText className="bg-accent-700 text-white rounded-full text-5xl p-3 shadow-lg" />
           </div>
           <div className="flex gap-2 text-sm">
             <span className="text-green-500 flex items-center">
               <HiArrowNarrowUp />
               {lastMonthPosts}
             </span>
-            <div className="text-gray-500">Last month</div>
+            <div className="text-gray-500">Bulan lalu</div>
           </div>
         </div>
       </div>
@@ -164,7 +170,7 @@ export default function DashboardComp() {
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between p-3 text-sm font-semibold">
             <h1 className="text-center p-2">Recent users</h1>
-            <Button outline gradientDuoTone="purpleToPink">
+            <Button outline color="failure">
               <Link to={"/dashboard?tab=users"}>See all</Link>
             </Button>
           </div>
@@ -173,9 +179,9 @@ export default function DashboardComp() {
               <Table.HeadCell>User image</Table.HeadCell>
               <Table.HeadCell>Username</Table.HeadCell>
             </Table.Head>
-            {users.map((user) => (
-              <Table.Body key={user._id} className="divide-y">
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+            <Table.Body className="divide-y">
+              {users.map((user) => (
+                <Table.Row key={user._id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                   <Table.Cell>
                     <img
                       src={user.profilePicture}
@@ -185,8 +191,8 @@ export default function DashboardComp() {
                   </Table.Cell>
                   <Table.Cell>{user.username}</Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
         </div>
 
@@ -194,7 +200,7 @@ export default function DashboardComp() {
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between p-3 text-sm font-semibold">
             <h1 className="text-center p-2">Recent comments</h1>
-            <Button outline gradientDuoTone="purpleToPink">
+            <Button outline color="failure">
               <Link to={"/dashboard?tab=comments"}>See all</Link>
             </Button>
           </div>
@@ -203,16 +209,16 @@ export default function DashboardComp() {
               <Table.HeadCell>Comment content</Table.HeadCell>
               <Table.HeadCell>Likes</Table.HeadCell>
             </Table.Head>
-            {comments.map((comment) => (
-              <Table.Body key={comment._id} className="divide-y">
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+            <Table.Body className="divide-y">
+              {comments.map((comment) => (
+                <Table.Row key={comment._id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                   <Table.Cell className="w-96">
                     <p className="line-clamp-2">{comment.content}</p>
                   </Table.Cell>
                   <Table.Cell>{comment.numberOfLikes}</Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
         </div>
 
@@ -220,7 +226,7 @@ export default function DashboardComp() {
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between p-3 text-sm font-semibold">
             <h1 className="text-center p-2">Recent posts</h1>
-            <Button outline gradientDuoTone="purpleToPink">
+            <Button outline color="failure">
               <Link to={"/dashboard?tab=posts"}>See all</Link>
             </Button>
           </div>
@@ -230,9 +236,9 @@ export default function DashboardComp() {
               <Table.HeadCell>Post Title</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
             </Table.Head>
-            {posts.map((post) => (
-              <Table.Body key={post._id} className="divide-y">
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
+            <Table.Body className="divide-y">
+              {posts.map((post) => (
+                <Table.Row key={post._id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                   <Table.Cell>
                     <img
                       src={post.image}
@@ -243,8 +249,8 @@ export default function DashboardComp() {
                   <Table.Cell className="w-96">{post.title}</Table.Cell>
                   <Table.Cell className="w-5">{post.category}</Table.Cell>
                 </Table.Row>
-              </Table.Body>
-            ))}
+              ))}
+            </Table.Body>
           </Table>
         </div>
       </div>
